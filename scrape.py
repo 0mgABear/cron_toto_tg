@@ -12,16 +12,28 @@ def scrape_next_draw():
 
         text = page.inner_text("body")
 
-        jackpot_match = re.search(r"Next Jackpot\s*\$[0-9,]+ est", text)
-        jackpot = jackpot_match.group() if jackpot_match else "Not found"
+        # Match "Next Jackpot" and capture the number part
+        jackpot_match = re.search(r"Next Jackpot\s*\$([0-9,]+)\s*est", text)
+        if jackpot_match:
+            jackpot_amount = jackpot_match.group(1)  # capture group: just the number
+            jackpot = f"Next Jackpot: ${jackpot_amount} est"
+        else:
+            jackpot_amount = None
+            jackpot = "Next Jackpot: Not found"
 
-        draw_match = re.search(r"Next Draw\s*\n?\s*.*,\s*\d{1,2}\s*[A-Za-z]{3}\s*\d{4}\s*,\s*\d{1,2}\.\d{2}[ap]m", text)
-        draw = draw_match.group().replace("\n", " ").strip() if draw_match else "Not found"
+        # Match "Next Draw" line
+        draw_match = re.search(
+            r"Next Draw\s*\n?\s*(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),\s*\d{1,2}\s*[A-Za-z]{3}\s*\d{4}\s*,\s*\d{1,2}\.\d{2}[ap]m",
+            text
+        )
+        draw = draw_match.group().replace("\n", " ").strip() if draw_match else "Next Draw: Not found"
 
         browser.close()
-        return jackpot, draw
+        return jackpot, jackpot_amount, draw
+
 
 if __name__ == "__main__":
-    jackpot, draw = scrape_next_draw()
-    print(f"Jackpot: {jackpot}")
-    print(f"Draw: {draw}")
+    jackpot, jackpot_amount, draw = scrape_next_draw()
+    print(jackpot)
+    print(draw)
+    print(f"(Extracted amount only: {jackpot_amount})")
